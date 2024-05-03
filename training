@@ -1,0 +1,40 @@
+#! /bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks=1
+#SBATCH --nodelist=ilps-cn117
+##SBATCH --exclude=ilps-cn[101-114]
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=20G
+#SBATCH --time=6-10
+##SBATCH --begin=now+1minute
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=sara.rajaei237@gmail.com
+
+
+#SBATCH -o out.o
+#SBATCH -e err.e
+
+
+export PATH=/home/srajaee/anaconda3/bin:$PATH
+source /home/srajaee/.bashrc
+conda activate new-bias
+export CUDA_HOME="/usr/local/cuda-11.3"
+export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so
+export PATH="${CUDA_HOME}/bin:${PATH}"
+export LIBRARY_PATH="${CUDA_HOME}/lib64:${LIBRARY_PATH}"
+export TRANSFORMERS_CACHE="/ivi/ilps/personal/srajaee/HF/"
+##export HF_DATASETS_CACHE="/ivi/ilps/personal/srajaee/HF/datasets/"
+export LD_LIBRARY_PATH="${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/srajaee/anaconda3/lib/
+
+torchrun --nproc_per_node 1 --master_port 47772  fine-tuning/finetuning.py --MODEL 'XLM-r' \
+        --TASK 'squad' \
+        --MAX_LENGTH 384 \
+        --do_crosslingual_eval \
+        --per_label_evaluation \
+        --SAVING_PATH '/ivi/ilps/personal/srajaee/bias/test/' \
+        --SAVED_MODEL_PATH '/ivi/ilps/personal/srajaee/bias/qa_xlmr_42/checkpoint-16800' \
+
+
